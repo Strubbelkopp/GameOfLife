@@ -5,8 +5,8 @@ WIDTH = 10
 HEIGHT = 10
 ITERATIONS = 5
 
-grid_matrix = np.zeros((HEIGHT,WIDTH)) #grid containing the cells
-save_matrix = np.zeros((HEIGHT,WIDTH)) #matrix to store amount of alive neighbour cells
+grid_matrix = np.zeros((HEIGHT,WIDTH), dtype=int) #grid containing the cells
+save_matrix = np.zeros((HEIGHT,WIDTH), dtype=int) #matrix to store amount of alive neighbour cells
 
 #starting cells
 grid_matrix[0,1] = 1
