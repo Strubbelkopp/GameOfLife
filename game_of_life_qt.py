@@ -6,8 +6,8 @@ from PyQt6.QtCore import *
 import sys
 
 #starting values
-CELL_AMOUNT_X = 50
-CELL_AMOUNT_Y = 50
+CELL_AMOUNT_X = 100
+CELL_AMOUNT_Y = 100
 ITERATIONS = 150
 SPEED = 5
 WINDOW_WIDTH = 800
@@ -15,6 +15,7 @@ WINDOW_HEIGHT = 600
 WIDGET_PANEL_WIDTH = 200
 CELL_WIDTH = int((WINDOW_WIDTH-WIDGET_PANEL_WIDTH)/CELL_AMOUNT_X)
 CELL_HEIGHT = int(WINDOW_HEIGHT/CELL_AMOUNT_Y)
+WRAP_AROUND = True
 
 #grid containing the cells
 grid_matrix = np.zeros((CELL_AMOUNT_Y, CELL_AMOUNT_X), dtype=int)
@@ -72,35 +73,31 @@ class MainWindow(QMainWindow):
     def calcNeighbours(self, grid_matrix):
         for y in range(CELL_AMOUNT_Y):
             for x in range(CELL_AMOUNT_X):
-                alive_neighbours = 0
-
-                if x != 0 and y !=0:
-                    if grid_matrix[y-1,x-1] == 1:
-                        alive_neighbours += 1
-                if y != 0:
-                    if grid_matrix[y-1,x] == 1:
-                        alive_neighbours += 1
-                if y != 0 and x != CELL_AMOUNT_X-1:
-                    if grid_matrix[y-1,x+1] == 1:
-                        alive_neighbours += 1
-                if x != 0:
-                    if grid_matrix[y,x-1] == 1: 
-                        alive_neighbours += 1
-                if x != CELL_AMOUNT_X-1:
-                    if grid_matrix[y,x+1] == 1:
-                        alive_neighbours += 1
-                if y != CELL_AMOUNT_Y-1 and x != 0:
-                    if grid_matrix[y+1,x-1] == 1:
-                        alive_neighbours += 1
-                if y != CELL_AMOUNT_Y-1:
-                    if grid_matrix[y+1,x] == 1:
-                        alive_neighbours += 1
-                if y != CELL_AMOUNT_Y-1 and x != CELL_AMOUNT_X-1:
-                    if grid_matrix[y+1,x+1] == 1:
-                        alive_neighbours += 1
-            
-                save_matrix[y,x] = alive_neighbours
-
+                
+                if(WRAP_AROUND == False):
+                    alive_neighbours = 0
+                    try: # if wrap around is disabled try to calculate neighbours
+                        for yOffset in range(-1, 2): # -1 to 1
+                            for xOffset in range(-1, 2):
+                                neighbourY = y + yOffset 
+                                neighbourX = x + xOffset 
+                                if grid_matrix[neighbourY, neighbourX] == 1:
+                                    alive_neighbours += 1  
+                    except: # move on if cell was non-existant and it gave an out of bounds error
+                        pass               
+                
+                if(WRAP_AROUND == True):
+                    alive_neighbours = 0
+                    for yOffset in range(-1, 2): # -1 to 1
+                        for xOffset in range(-1, 2):
+                            neighbourY = (y + yOffset + CELL_AMOUNT_Y) % CELL_AMOUNT_Y # y + yOffset -> local y position of neighbour cell. If we add the grid width and take the modulus,
+                            neighbourX = (x + xOffset + CELL_AMOUNT_X) % CELL_AMOUNT_X # we can wrap around for edge cases. Eg. y = 0, yOffset = -1, CELL_AMOUNT_Y = 10 -> neighbourY = (0 - 1 + 10) % 10 = 9
+                            if grid_matrix[neighbourY, neighbourX] == 1:
+                                alive_neighbours += 1
+                    
+                            
+                save_matrix[y,x] = alive_neighbours - grid_matrix[y,x] #subtract own state again
+                
         return save_matrix
 
     def updateCells(self, grid_matrix):
